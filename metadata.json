@@ -1,0 +1,7 @@
+{
+  "name": "Paiva Moda System",
+  "description": "A modern, responsive POS and management system for Paiva Moda, capable of running on PC and Mobile.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
