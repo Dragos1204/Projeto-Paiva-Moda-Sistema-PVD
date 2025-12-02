@@ -16,7 +16,7 @@ export type UserRole = 'ADMIN' | 'EMPLOYEE';
 
 export interface User {
   id: string;
-  username: string; // The display name in the dropdown
+  username: string; // Nome exibido no login
   password: string;
   name: string;
   role: UserRole;
@@ -26,11 +26,11 @@ export interface Product {
   id: number;
   name: string;
   price: number;
-  costPrice?: number; // Preço de Custo
+  costPrice?: number;
   category: string;
   stock: number;
-  barcode: string;     // Código de Barras (GTIN/EAN)
-  internalCode?: string; // Código Interno da Loja
+  barcode: string;     
+  internalCode?: string;
   image?: string;
   description?: string;
 }
@@ -45,8 +45,8 @@ export interface Customer {
   phone: string;
   email: string;
   address?: string;
-  creditLimit?: number; // Limite de Crédito
-  usedCredit?: number;  // Crédito em uso
+  creditLimit?: number;
+  usedCredit?: number;
 }
 
 export interface DashboardStat {
@@ -73,22 +73,22 @@ export type SaleStatus = 'COMPLETED' | 'CANCELLED';
 
 export interface Sale {
   id: number;
-  sequence?: number; // Número sequencial da venda (Ex: 1, 2, 3...)
-  date: string; // ISO Date YYYY-MM-DD
-  timestamp: string; // ISO String
+  sequence?: number;
+  date: string;
+  timestamp: string;
   customerId: string;
   customerName: string;
-  cpf?: string; // CPF na nota
+  cpf?: string;
   items: CartItem[];
   subtotal: number;
   discount: number;
   total: number;
-  paymentMethod: string; // 'CREDIT_CARD', 'DEBIT_CARD', 'MONEY', 'PIX', 'BEMOL', 'STORE_CREDIT'
-  installments?: number; // Number of installments for credit card
+  paymentMethod: string;
+  installments?: number;
   observation?: string;
   change?: number;
-  status?: SaleStatus; // Status da venda
-  interestAndFines?: number; // Valor acumulado de juros recebidos (Cobrança)
+  status?: SaleStatus;
+  interestAndFines?: number; // Juros Recebidos
 }
 
 export type FinancialType = 'INCOME' | 'EXPENSE';
@@ -101,11 +101,11 @@ export interface FinancialRecord {
   type: FinancialType;
   category: string;
   dueDate: string;
-  paymentDate?: string; // Date when it was actually paid
-  paymentMethod?: string; // How it was paid (Pix, Money, etc.)
+  paymentDate?: string;
+  paymentMethod?: string;
   status: FinancialStatus;
-  saleId?: number; // Link to sale
-  customerId?: string; // Link to customer for debts
+  saleId?: number;
+  customerId?: string;
 }
 
 export interface AppSetting {

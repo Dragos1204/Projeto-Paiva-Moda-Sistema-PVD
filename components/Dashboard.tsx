@@ -19,25 +19,35 @@ interface DashboardProps {
 }
 
 export const Dashboard: React.FC<DashboardProps> = ({ onNavigate, sales }) => {
-  // Calculate Stats based on Sales Data
+  // Calculate Stats based on Sales Data safely (ignoring Timezones issues)
+  
+  // 1. Get Local Date String "YYYY-MM-DD" correctly
   const now = new Date();
-  const todayStr = now.toISOString().split('T')[0];
-  const currentMonth = now.getMonth();
-  const currentYear = now.getFullYear();
+  const offset = now.getTimezoneOffset() * 60000;
+  const localTodayStr = new Date(now.getTime() - offset).toISOString().split('T')[0];
+  
+  const [currentYear, currentMonth] = localTodayStr.split('-');
 
+  // 2. Calculate Today
   const todayTotal = sales
-    .filter(s => s.date === todayStr)
+    .filter(s => s.date === localTodayStr && s.status !== 'CANCELLED')
     .reduce((acc, curr) => acc + curr.total, 0);
 
+  // 3. Calculate Month
   const monthTotal = sales
     .filter(s => {
-      const d = new Date(s.date);
-      return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+      if (s.status === 'CANCELLED') return false;
+      const [saleYear, saleMonth] = s.date.split('-'); // Extract YYYY and MM from sale date string
+      return saleYear === currentYear && saleMonth === currentMonth;
     })
     .reduce((acc, curr) => acc + curr.total, 0);
 
+  // 4. Calculate Year
   const yearTotal = sales
-    .filter(s => new Date(s.date).getFullYear() === currentYear)
+    .filter(s => {
+      if (s.status === 'CANCELLED') return false;
+      return s.date.startsWith(currentYear);
+    })
     .reduce((acc, curr) => acc + curr.total, 0);
 
   const stats: DashboardStat[] = [
@@ -72,7 +82,10 @@ export const Dashboard: React.FC<DashboardProps> = ({ onNavigate, sales }) => {
   ];
 
   // Get last 5 sales for recent activity
-  const recentSales = [...sales].sort((a,b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()).slice(0, 5);
+  const recentSales = [...sales]
+    .filter(s => s.status !== 'CANCELLED')
+    .sort((a,b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+    .slice(0, 5);
 
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-8">

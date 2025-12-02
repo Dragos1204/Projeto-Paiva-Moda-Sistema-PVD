@@ -1,50 +1,75 @@
 
 import React, { useState } from 'react';
-import { ShoppingBag, Lock, User, Mail, ArrowLeft, CheckCircle2 } from 'lucide-react';
-import { STORE_NAME } from '../constants';
+import { ShoppingBag, Lock, User as UserIcon, ArrowLeft, KeyRound, ShieldCheck, Code2 } from 'lucide-react';
+import { STORE_NAME, MASTER_RECOVERY_KEY } from '../constants';
+import { User } from '../types';
 
 interface LoginProps {
-  onLogin: () => void;
-  validatePassword: (pass: string) => boolean;
+  users: User[];
+  onLogin: (user: User) => void;
+  onRecoverPassword: (userId: string, newPass: string) => void;
 }
 
-export const Login: React.FC<LoginProps> = ({ onLogin, validatePassword }) => {
+export const Login: React.FC<LoginProps> = ({ users, onLogin, onRecoverPassword }) => {
   const [loading, setLoading] = useState(false);
   const [view, setView] = useState<'LOGIN' | 'RECOVERY'>('LOGIN');
   const [error, setError] = useState('');
   
   // Login Form State
-  const [username, setUsername] = useState('admin');
-  const [password, setPassword] = useState('1234');
+  const [selectedUserId, setSelectedUserId] = useState(users[0]?.id || '');
+  const [password, setPassword] = useState('');
 
   // Recovery Form State
-  const [recoveryEmail, setRecoveryEmail] = useState('');
-  const [recoverySent, setRecoverySent] = useState(false);
+  const [masterKey, setMasterKey] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [step, setStep] = useState<'KEY' | 'RESET'>('KEY');
 
   const handleLoginSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
 
-    // Simulate API call
+    const user = users.find(u => u.id === selectedUserId);
+
     setTimeout(() => {
-      if (validatePassword(password)) {
-        onLogin();
+      if (user && user.password === password) {
+        onLogin(user);
       } else {
-        setError('Senha incorreta. Tente novamente.');
+        setError('Senha incorreta.');
         setLoading(false);
       }
-    }, 800);
+    }, 600);
   };
 
-  const handleRecoverySubmit = (e: React.FormEvent) => {
+  const handleMasterKeyCheck = (e: React.FormEvent) => {
     e.preventDefault();
+    if (masterKey === MASTER_RECOVERY_KEY) {
+      setStep('RESET');
+      setError('');
+    } else {
+      setError('Chave Mestra inválida.');
+    }
+  };
+
+  const handleResetPassword = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newPassword.length < 4) {
+      setError('A senha deve ter no mínimo 4 caracteres.');
+      return;
+    }
+    
     setLoading(true);
-    // Simulate sending email
     setTimeout(() => {
-      setRecoverySent(true);
-      setLoading(false);
-    }, 1500);
+        onRecoverPassword(selectedUserId, newPassword);
+        setView('LOGIN');
+        setStep('KEY');
+        setPassword('');
+        setMasterKey('');
+        setNewPassword('');
+        setLoading(false);
+        setError('');
+        alert('Senha redefinida com sucesso!');
+    }, 1000);
   };
 
   return (
@@ -58,7 +83,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin, validatePassword }) => {
           </div>
           <h1 className="text-2xl font-bold text-white mb-2 relative z-10">{STORE_NAME}</h1>
           <p className="text-purple-100 relative z-10">
-            {view === 'LOGIN' ? 'Entre para acessar o sistema' : 'Recuperação de Acesso'}
+            {view === 'LOGIN' ? 'Selecione seu usuário' : 'Recuperação Offline'}
           </p>
           
           {/* Decorative circles */}
@@ -79,14 +104,18 @@ export const Login: React.FC<LoginProps> = ({ onLogin, validatePassword }) => {
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-700">Usuário</label>
                 <div className="relative">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
-                  <input 
-                    type="text" 
-                    className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
-                    placeholder="admin"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                  />
+                  <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                  <select 
+                    className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all bg-white appearance-none cursor-pointer"
+                    value={selectedUserId}
+                    onChange={(e) => setSelectedUserId(e.target.value)}
+                  >
+                    {users.map(u => (
+                      <option key={u.id} value={u.id}>
+                        {u.username} {u.role === 'ADMIN' ? '(Admin)' : '(Func)'}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
 
@@ -101,7 +130,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin, validatePassword }) => {
                     }}
                     className="text-xs text-purple-600 hover:text-purple-800 font-medium"
                   >
-                    Esqueceu a senha?
+                    Esqueci a senha
                   </button>
                 </div>
                 <div className="relative">
@@ -109,7 +138,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin, validatePassword }) => {
                   <input 
                     type="password" 
                     className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
-                    placeholder="••••••••"
+                    placeholder="••••"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                   />
@@ -131,69 +160,95 @@ export const Login: React.FC<LoginProps> = ({ onLogin, validatePassword }) => {
           ) : (
             // RECOVERY VIEW
             <div className="space-y-6">
-              {!recoverySent ? (
-                <form onSubmit={handleRecoverySubmit} className="space-y-6">
-                  <p className="text-sm text-gray-600 text-center">
-                    Digite seu e-mail cadastrado. Enviaremos um link para você redefinir sua senha.
-                  </p>
+              {step === 'KEY' ? (
+                <form onSubmit={handleMasterKeyCheck} className="space-y-6">
+                  <div className="text-center mb-4">
+                    <ShieldCheck size={40} className="mx-auto text-gray-300 mb-2" />
+                    <p className="text-sm text-gray-600">
+                        Digite a <strong>Chave Mestra</strong> do sistema para redefinir a senha do usuário selecionado.
+                    </p>
+                  </div>
+
+                  {error && (
+                    <div className="p-3 bg-red-50 text-red-600 text-sm rounded-lg text-center">{error}</div>
+                  )}
 
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-700">E-mail</label>
+                    <label className="text-sm font-medium text-gray-700">Usuário a recuperar</label>
+                    <select 
+                        className="w-full p-3 border border-gray-200 rounded-lg bg-gray-50 font-bold"
+                        value={selectedUserId}
+                        onChange={(e) => setSelectedUserId(e.target.value)}
+                    >
+                        {users.map(u => <option key={u.id} value={u.id}>{u.username}</option>)}
+                    </select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700">Chave Mestra</label>
                     <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                      <KeyRound className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
                       <input 
-                        type="email" 
+                        type="password" 
                         required
                         className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
-                        placeholder="seu@email.com"
-                        value={recoveryEmail}
-                        onChange={(e) => setRecoveryEmail(e.target.value)}
+                        placeholder="Chave de Recuperação"
+                        value={masterKey}
+                        onChange={(e) => setMasterKey(e.target.value)}
                       />
                     </div>
                   </div>
 
-                  <button 
-                    type="submit" 
-                    disabled={loading}
-                    className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 rounded-lg transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-purple-500/30 flex justify-center items-center"
-                  >
-                    {loading ? (
-                      <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    ) : (
-                      'RECUPERAR SENHA'
-                    )}
+                  <button type="submit" className="w-full bg-gray-800 hover:bg-black text-white font-bold py-3 rounded-lg">
+                    VALIDAR CHAVE
                   </button>
                 </form>
               ) : (
-                <div className="text-center py-4 animate-in fade-in zoom-in">
-                  <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 text-green-600">
-                    <CheckCircle2 size={32} />
-                  </div>
-                  <h3 className="text-lg font-bold text-gray-800 mb-2">Verifique seu E-mail</h3>
-                  <p className="text-sm text-gray-600 mb-6">
-                    Enviamos um link de recuperação para: <br/>
-                    <span className="font-medium text-purple-600">{recoveryEmail}</span>
-                  </p>
-                </div>
+                <form onSubmit={handleResetPassword} className="space-y-6 animate-in fade-in slide-in-from-right">
+                   <div className="text-center">
+                      <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-2 text-green-600">
+                        <Lock size={24} />
+                      </div>
+                      <h3 className="font-bold text-gray-800">Definir Nova Senha</h3>
+                      <p className="text-sm text-gray-500">Para: {users.find(u => u.id === selectedUserId)?.username}</p>
+                   </div>
+
+                   <input 
+                      type="text" 
+                      required
+                      className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-green-500 text-center text-lg font-bold"
+                      placeholder="Nova Senha"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                   />
+
+                   <button type="submit" disabled={loading} className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg">
+                      {loading ? 'SALVANDO...' : 'SALVAR NOVA SENHA'}
+                   </button>
+                </form>
               )}
 
               <button 
                 onClick={() => {
                   setView('LOGIN');
-                  setRecoverySent(false);
-                  setRecoveryEmail('');
                   setError('');
+                  setStep('KEY');
+                  setMasterKey('');
                 }}
                 className="w-full flex items-center justify-center gap-2 text-gray-500 hover:text-gray-800 font-medium transition-colors"
               >
                 <ArrowLeft size={18} />
-                Voltar para o Login
+                Voltar
               </button>
             </div>
           )}
           
-          <div className="mt-6 text-center border-t border-gray-100 pt-6">
-             <span className="text-xs text-gray-400">Sistema Versão Web 1.1</span>
+          <div className="mt-8 text-center border-t border-gray-100 pt-6">
+             <p className="text-xs text-gray-400 mb-1">Sistema Versão 2.0</p>
+             <div className="flex items-center justify-center gap-1.5 text-xs font-bold text-purple-600">
+                <Code2 size={14} />
+                <span>Desenvolvido por Ericles Silva</span>
+             </div>
           </div>
         </div>
       </div>
