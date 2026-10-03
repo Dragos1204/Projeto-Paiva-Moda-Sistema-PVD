@@ -4,31 +4,64 @@ import { Product, Customer, StockMovement, FinancialRecord, Sale, User } from '.
 import { DEFAULT_USERS } from './constants';
 
 interface PaivaModaDB extends DBSchema {
-  products: { key: number; value: Product; };
-  customers: { key: string; value: Customer; };
-  movements: { key: number; value: StockMovement; };
-  financials: { key: number; value: FinancialRecord; };
-  sales: { key: number; value: Sale; };
-  users: { key: string; value: User; };
-  settings: { key: string; value: any; };
+  products: {
+    key: number;
+    value: Product;
+  };
+  customers: {
+    key: string;
+    value: Customer;
+  };
+  movements: {
+    key: number;
+    value: StockMovement;
+  };
+  financials: {
+    key: number;
+    value: FinancialRecord;
+  };
+  sales: {
+    key: number;
+    value: Sale;
+  };
+  users: {
+    key: string;
+    value: User;
+  };
+  settings: {
+    key: string;
+    value: any;
+  };
 }
 
 const DB_NAME = 'paiva-moda-db';
-const DB_VERSION = 2; 
+const DB_VERSION = 2; // Bumped Version for Users Table
 
 export const db = {
   async connect(): Promise<IDBPDatabase<PaivaModaDB>> {
     const database = await openDB<PaivaModaDB>(DB_NAME, DB_VERSION, {
       upgrade(db, oldVersion, newVersion, transaction) {
-        if (!db.objectStoreNames.contains('products')) db.createObjectStore('products', { keyPath: 'id' });
-        if (!db.objectStoreNames.contains('customers')) db.createObjectStore('customers', { keyPath: 'id' });
-        if (!db.objectStoreNames.contains('movements')) db.createObjectStore('movements', { keyPath: 'id' });
-        if (!db.objectStoreNames.contains('financials')) db.createObjectStore('financials', { keyPath: 'id' });
-        if (!db.objectStoreNames.contains('sales')) db.createObjectStore('sales', { keyPath: 'id' });
-        if (!db.objectStoreNames.contains('settings')) db.createObjectStore('settings');
-        
+        if (!db.objectStoreNames.contains('products')) {
+          db.createObjectStore('products', { keyPath: 'id' });
+        }
+        if (!db.objectStoreNames.contains('customers')) {
+          db.createObjectStore('customers', { keyPath: 'id' });
+        }
+        if (!db.objectStoreNames.contains('movements')) {
+          db.createObjectStore('movements', { keyPath: 'id' });
+        }
+        if (!db.objectStoreNames.contains('financials')) {
+          db.createObjectStore('financials', { keyPath: 'id' });
+        }
+        if (!db.objectStoreNames.contains('sales')) {
+          db.createObjectStore('sales', { keyPath: 'id' });
+        }
+        if (!db.objectStoreNames.contains('settings')) {
+          db.createObjectStore('settings');
+        }
         if (!db.objectStoreNames.contains('users')) {
           const userStore = db.createObjectStore('users', { keyPath: 'id' });
+          // Seed Default Users immediately
           DEFAULT_USERS.forEach(u => userStore.put(u));
         }
       },
@@ -62,6 +95,7 @@ export const db = {
   },
 
   // --- BACKUP & RESTORE ---
+
   async exportAllData() {
     const database = await this.connect();
     const data = {
@@ -82,11 +116,14 @@ export const db = {
     const database = await this.connect();
     try {
       const data = JSON.parse(jsonString);
+      
+      // Transaction to ensure atomicity (all or nothing)
       const tx = database.transaction(
         ['products', 'customers', 'movements', 'financials', 'sales', 'settings', 'users'], 
         'readwrite'
       );
 
+      // Clear existing data
       await Promise.all([
         tx.objectStore('products').clear(),
         tx.objectStore('customers').clear(),
@@ -97,6 +134,7 @@ export const db = {
         tx.objectStore('users').clear(),
       ]);
 
+      // Import new data
       for (const p of data.products || []) await tx.objectStore('products').put(p);
       for (const c of data.customers || []) await tx.objectStore('customers').put(c);
       for (const m of data.movements || []) await tx.objectStore('movements').put(m);
