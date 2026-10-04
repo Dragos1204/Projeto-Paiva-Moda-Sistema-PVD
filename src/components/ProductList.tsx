@@ -5,7 +5,7 @@ import {
   Layers, ShoppingBag, Minus, Search, CheckCircle2, Sparkles, Copy, 
   RefreshCw, Check, AlertCircle, Eye
 } from 'lucide-react';
-import { uploadProductPhotoToFirebase, isHeicFile } from '../imageOptimizer';
+import { compressImageToBase64Webp, isHeicFile } from '../imageOptimizer';
 import { BarcodeLabelModal } from './BarcodeLabelModal';
 import { ConfirmModal } from './ConfirmModal';
 import { useToast } from '../context/ToastContext';
@@ -195,7 +195,7 @@ export const ProductList: React.FC<ProductListProps> = ({
     handleVariationChange(index, 'sku', autoSku);
   };
 
-  // Upload Inteligente Universal (iPhone HEIC/HEIF, Android, PC) + Firebase Storage
+  // Upload Inteligente Autônomo (Base64 WebP direto no Firestore)
   const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -215,29 +215,33 @@ export const ProductList: React.FC<ProductListProps> = ({
     }
 
     try {
-      const prodIdentifier = formData.internalCode || formData.id || `temp_${Date.now()}`;
-      const firebaseUrl = await uploadProductPhotoToFirebase(
+      const base64Url = await compressImageToBase64Webp(
         file,
-        prodIdentifier,
         (pct, statusMsg) => {
           setUploadProgress(pct);
           setUploadStatusText(statusMsg);
         }
       );
 
-      // Salva URL pública definitiva do Firebase Storage
-      setPreviewImage(firebaseUrl);
-      setFormData(prev => ({ ...prev, image: firebaseUrl }));
-      setUploadStatusText('Foto enviada e otimizada no Firebase Storage!');
+      // Salva Base64 WebP diretamente no estado do produto
+      setPreviewImage(base64Url);
+      setFormData(prev => ({ ...prev, image: base64Url }));
+      setUploadProgress(100);
+      setUploadStatusText('Foto otimizada com sucesso!');
+      toast.success("Foto Otimizada", "Imagem convertida em WebP e pronta para salvar.");
+
       setTimeout(() => {
         setUploadingImage(false);
         setUploadProgress(0);
         setUploadStatusText('');
-      }, 1200);
+      }, 400);
     } catch (err: any) {
       console.error("Erro no processamento da imagem:", err);
-      setUploadError(err.message || 'Erro ao processar e enviar foto.');
+      const errMsg = err.message || 'Erro ao processar imagem.';
+      setUploadError(errMsg);
+      toast.error("Erro na Foto", errMsg);
       setUploadingImage(false);
+      setUploadProgress(0);
     } finally {
       e.target.value = '';
     }
@@ -256,7 +260,7 @@ export const ProductList: React.FC<ProductListProps> = ({
     e.preventDefault();
 
     if (uploadingImage) {
-      toast.warning("Envio em Andamento", "Aguarde o término do envio da foto para o Firebase antes de salvar.");
+      toast.warning("Processamento em Andamento", "Aguarde a otimização da foto antes de salvar.");
       return;
     }
 
@@ -572,7 +576,7 @@ export const ProductList: React.FC<ProductListProps> = ({
                         <Upload size={28} className="mx-auto mb-2 text-purple-500" />
                         <span className="text-xs font-semibold block text-gray-700">Enviar Foto</span>
                         <span className="text-[10px] text-gray-400 block mt-0.5">iPhone (HEIC), JPG, PNG, WebP</span>
-                        <span className="text-[9px] text-purple-600 font-bold block mt-1">Otimizada para 150-250 KB</span>
+                        <span className="text-[9px] text-purple-600 font-bold block mt-1">Otimizada em WebP (Máx 800px)</span>
                       </div>
                     )}
 
@@ -803,9 +807,11 @@ export const ProductList: React.FC<ProductListProps> = ({
                 </button>
                 <button 
                   type="submit" 
-                  className="px-6 py-2.5 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl text-xs font-bold shadow-lg transition"
+                  disabled={uploadingImage}
+                  className="px-6 py-2.5 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-xl text-xs font-bold shadow-lg transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                 >
-                  Salvar Produto com Grade
+                  {uploadingImage && <RefreshCw size={14} className="animate-spin" />}
+                  <span>Salvar Produto com Grade</span>
                 </button>
               </div>
             </form>

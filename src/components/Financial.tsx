@@ -90,11 +90,11 @@ export const Financial: React.FC<FinancialProps> = ({ records, setRecords }) => 
     return r.status === filter;
   });
 
-  const toggleStatus = (id: number) => {
+  const toggleStatus = (id: string | number) => {
     const today = getLocalDateString();
     
     setRecords(records.map(r => 
-      r.id === id 
+      String(r.id) === String(id) 
         ? { 
             ...r, 
             status: r.status === 'PAID' ? 'PENDING' : 'PAID',
