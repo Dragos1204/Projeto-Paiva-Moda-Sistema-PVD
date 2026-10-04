@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Lock, X, AlertTriangle } from 'lucide-react';
+import { Lock, AlertTriangle } from 'lucide-react';
 
 interface PasswordModalProps {
   isOpen: boolean;

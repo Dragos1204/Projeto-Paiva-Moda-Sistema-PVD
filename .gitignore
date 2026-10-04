@@ -7,12 +7,21 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Dependências e Builds
 node_modules
 dist
 dist-ssr
-*.local
+build
+out
+.vercel
 
-# Editor directories and files
+# Variáveis locais e segredos
+*.local
+.env
+.env.*
+!.env.example
+
+# IDE e Sistema Operacional
 .vscode/*
 !.vscode/extensions.json
 .idea
@@ -22,3 +31,4 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+Thumbs.db

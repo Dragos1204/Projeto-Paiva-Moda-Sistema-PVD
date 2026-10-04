@@ -1,13 +1,16 @@
 {
   "name": "paiva-moda-system",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Sistema de Gestão Paiva Moda",
-  "main": "electron.js",
+  "main": "build/electron.js",
   "author": "Paiva Moda",
   "homepage": "./",
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
+    "dev": "vite --host 0.0.0.0 --port 3000",
+    "start": "vite --host 0.0.0.0 --port 3000",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "tsc --noEmit",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "electron:dev": "concurrently \"cross-env BROWSER=none npm start\" \"wait-on http://localhost:3000 && electron public/electron.js\"",
@@ -35,6 +38,9 @@
     "@types/node": "^16.18.126",
     "@types/react": "^18.2.66",
     "@types/react-dom": "^18.2.22",
+    "firebase": "^12.19.0",
+    "heic2any": "^0.0.4",
+    "html5-qrcode": "^2.3.8",
     "idb": "^8.0.0",
     "lucide-react": "^0.344.0",
     "react": "^18.2.0",
@@ -44,16 +50,17 @@
     "web-vitals": "^2.1.4"
   },
   "devDependencies": {
+    "@vitejs/plugin-react": "^6.1.1",
     "concurrently": "^8.2.2",
     "cross-env": "^7.0.3",
     "electron": "^29.1.0",
     "electron-builder": "^24.13.3",
+    "vite": "^8.3.2",
     "wait-on": "^7.2.0"
   },
   "eslintConfig": {
     "extends": [
-      "react-app",
-      "react-app/jest"
+      "react-app"
     ]
   },
   "browserslist": {

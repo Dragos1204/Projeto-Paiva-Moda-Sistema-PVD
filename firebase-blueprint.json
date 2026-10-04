@@ -1,0 +1,183 @@
+{
+  "entities": {
+    "Product": {
+      "title": "Product",
+      "description": "Product in store inventory with variation grid",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "price": { "type": "number" },
+        "costPrice": { "type": "number" },
+        "category": { "type": "string" },
+        "stock": { "type": "number" },
+        "barcode": { "type": "string" },
+        "internalCode": { "type": "string" },
+        "image": { "type": "string" },
+        "description": { "type": "string" }
+      },
+      "required": ["name", "price", "stock"]
+    },
+    "PreSale": {
+      "title": "PreSale",
+      "description": "Pre-sale order created on shop floor waiting for cashier checkout",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "code": { "type": "string" },
+        "customerId": { "type": "string" },
+        "customerName": { "type": "string" },
+        "sellerId": { "type": "string" },
+        "sellerName": { "type": "string" },
+        "subtotal": { "type": "number" },
+        "discount": { "type": "number" },
+        "total": { "type": "number" },
+        "status": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["code", "sellerId", "total", "status"]
+    },
+    "Customer": {
+      "title": "Customer",
+      "description": "Store customer",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "phone": { "type": "string" },
+        "email": { "type": "string" },
+        "address": { "type": "string" },
+        "cpf": { "type": "string" },
+        "creditLimit": { "type": "number" },
+        "usedCredit": { "type": "number" }
+      },
+      "required": ["name"]
+    },
+    "Sale": {
+      "title": "Sale",
+      "description": "Completed or cancelled POS sale with seller attribution",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "sequence": { "type": "number" },
+        "date": { "type": "string" },
+        "timestamp": { "type": "string" },
+        "customerId": { "type": "string" },
+        "customerName": { "type": "string" },
+        "cpf": { "type": "string" },
+        "subtotal": { "type": "number" },
+        "discount": { "type": "number" },
+        "total": { "type": "number" },
+        "paymentMethod": { "type": "string" },
+        "installments": { "type": "number" },
+        "observation": { "type": "string" },
+        "change": { "type": "number" },
+        "status": { "type": "string" },
+        "interestAndFines": { "type": "number" },
+        "sellerId": { "type": "string" },
+        "sellerName": { "type": "string" },
+        "preSaleId": { "type": "string" }
+      },
+      "required": ["date", "timestamp", "total", "paymentMethod"]
+    },
+    "StockMovement": {
+      "title": "StockMovement",
+      "description": "Inventory movement entry or exit with seller audit",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "productId": { "type": "string" },
+        "productName": { "type": "string" },
+        "variationId": { "type": "string" },
+        "type": { "type": "string" },
+        "quantity": { "type": "number" },
+        "date": { "type": "string" },
+        "reason": { "type": "string" },
+        "sellerId": { "type": "string" },
+        "sellerName": { "type": "string" }
+      },
+      "required": ["productId", "type", "quantity", "date"]
+    },
+    "FinancialRecord": {
+      "title": "FinancialRecord",
+      "description": "Financial revenue, accounts receivable and payable",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "description": { "type": "string" },
+        "amount": { "type": "number" },
+        "type": { "type": "string" },
+        "category": { "type": "string" },
+        "dueDate": { "type": "string" },
+        "paymentDate": { "type": "string" },
+        "paymentMethod": { "type": "string" },
+        "status": { "type": "string" },
+        "saleId": { "type": "string" },
+        "customerId": { "type": "string" },
+        "sellerId": { "type": "string" },
+        "isProjectedReceivable": { "type": "string" },
+        "nfeKey": { "type": "string" },
+        "supplierName": { "type": "string" }
+      },
+      "required": ["description", "amount", "type", "dueDate", "status"]
+    },
+    "User": {
+      "title": "User",
+      "description": "Store operator or administrator",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "username": { "type": "string" },
+        "cpf": { "type": "string" },
+        "password": { "type": "string" },
+        "name": { "type": "string" },
+        "role": { "type": "string" }
+      },
+      "required": ["username", "password", "role"]
+    },
+    "Setting": {
+      "title": "Setting",
+      "description": "Application settings",
+      "type": "object",
+      "properties": {
+        "key": { "type": "string" },
+        "value": { "type": "string" }
+      },
+      "required": ["key"]
+    }
+  },
+  "firestore": {
+    "/products/{productId}": {
+      "schema": "Product",
+      "description": "Products collection"
+    },
+    "/pre_sales/{preSaleId}": {
+      "schema": "PreSale",
+      "description": "Pre-sales waiting for cashier payment"
+    },
+    "/customers/{customerId}": {
+      "schema": "Customer",
+      "description": "Customers collection"
+    },
+    "/sales/{saleId}": {
+      "schema": "Sale",
+      "description": "Sales history collection"
+    },
+    "/movements/{movementId}": {
+      "schema": "StockMovement",
+      "description": "Stock movements collection"
+    },
+    "/financials/{financialId}": {
+      "schema": "FinancialRecord",
+      "description": "Financial records collection"
+    },
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "Store operators collection"
+    },
+    "/settings/{settingId}": {
+      "schema": "Setting",
+      "description": "Global settings"
+    }
+  }
+}
