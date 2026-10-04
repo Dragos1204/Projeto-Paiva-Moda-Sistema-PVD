@@ -147,5 +147,5 @@ vercel --prod
 
 ## 9. Licença e Direitos Autorais
 
-© 2026 **Paiva Moda**. Todos os direitos reservados.  
+© 2026 **Paiva Moda e Cronos Tecnologia**. Todos os direitos reservados.  
 Desenvolvido sob padrões de engenharia de software de alta performance para varejo de moda.
